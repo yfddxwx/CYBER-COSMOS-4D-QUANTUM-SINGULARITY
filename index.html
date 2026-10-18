@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>CYBER-COSMOS SINGULARITY // 4D量子奇点与超维视界</title>
+  <style>
+    :root {
+      --primary: #00f0ff;
+      --secondary: #ff0055;
+      --accent: #ffe600;
+      --bg: #030308;
+      --panel-bg: rgba(6, 11, 25, 0.75);
+      --border: rgba(0, 240, 255, 0.25);
+      --border-glow: rgba(0, 240, 255, 0.6);
+      --font-mono: 'Consolas', 'Fira Code', 'SF Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #e0f7fa;
+    }
+
+    #gl-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+      cursor: grab;
+    }
+
+    #gl-canvas:active {
+      cursor: grabbing;
+    }
+
+    /* HUD Layer */
+    .hud-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px;
+    }
+
+    /* Corner Sci-Fi Bracket Frames */
+    .corner-bracket {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--primary);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    .cb-tl { top: 16px; left: 16px; border-right: none; border-bottom: none; }
+    .cb-tr { top: 16px; right: 16px; border-left: none; border-bottom: none; }
+    .cb-bl { bottom: 16px; left: 16px; border-right: none; border-top: none; }
+    .cb-br { bottom: 16px; right: 16px; border-left: none; border-top: none; }
+
+    /* Header */
+    .hud-header {
+      pointer-events: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .title-box {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      padding: 14px 22px;
+      border-radius: 4px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(0, 240, 255, 0.05);
+      position: relative;
+    }
+
+    .title-box h1 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #ffffff, var(--primary), #a6ffcb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge-live {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #00ff88;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #00ff88;
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.4; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1.2); }
+    }
+
+    .title-box p {
+      font-size: 12px;
+      color: rgba(224, 247, 250, 0.7);
+      margin-top: 5px;
+      font-family: var(--font-mono);
+      letter-spacing: 1px;
+    }
+
+    /* Telemetry Panel */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      padding: 12px 18px;
+      border-radius: 4px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      font-family: var(--font-mono);
+    }
+
+    .telemetry-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .telemetry-label {
+      font-size: 10px;
+      color: rgba(0, 240, 255, 0.7);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .telemetry-val {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+    }
+
+    /* Controls Panel */
+    .controls-panel {
+      pointer-events: auto;
+      background: var(--panel-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 24px;
+      max-width: 540px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .panel-title {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--primary);
+      letter-spacing: 1.5px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+      padding-bottom: 6px;
+    }
+
+    /* Mode Selection Tabs */
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .mode-btn {
+      background: rgba(0, 240, 255, 0.06);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      color: #e0f7fa;
+      padding: 8px 6px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .mode-btn:hover {
+      background: rgba(0, 240, 255, 0.15);
+      border-color: var(--primary);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+    }
+
+    .mode-btn.active {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(255, 0, 85, 0.2));
+      border-color: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
+    }
+
+    .mode-icon {
+      font-size: 16px;
+    }
+
+    /* Slider Rows */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .slider-label {
+      width: 140px;
+      color: rgba(224, 247, 250, 0.8);
+      letter-spacing: 0.5px;
+    }
+
+    .slider-input {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.15);
+      outline: none;
+      transition: background 0.2s;
+    }
+
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--primary);
+      transition: transform 0.15s;
+    }
+
+    .slider-input::-webkit-slider-thumb:hover {
+      transform: scale(1.3);
+    }
+
+    .slider-val {
+      width: 45px;
+      text-align: right;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    /* Action Buttons Row */
+    .action-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 9px 12px;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--border);
+      color: #ffffff;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      letter-spacing: 0.5px;
+    }
+
+    .action-btn:hover {
+      background: var(--primary);
+      color: #030308;
+      box-shadow: 0 0 16px var(--primary);
+      border-color: var(--primary);
+    }
+
+    .action-btn.btn-pulse {
+      background: linear-gradient(90deg, rgba(255, 0, 85, 0.2), rgba(0, 240, 255, 0.2));
+      border-color: var(--secondary);
+    }
+
+    .action-btn.btn-pulse:hover {
+      background: var(--secondary);
+      color: #ffffff;
+      box-shadow: 0 0 20px var(--secondary);
+    }
+
+    /* Audio toggle icon active state */
+    .action-btn.active-audio {
+      border-color: #00ff88;
+      color: #00ff88;
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+    }
+
+    /* Viewport Center Reticle */
+    .reticle-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 80px;
+      pointer-events: none;
+      opacity: 0.25;
+      transition: opacity 0.3s;
+    }
+    .reticle-circle {
+      width: 100%;
+      height: 100%;
+      border: 1px dashed var(--primary);
+      border-radius: 50%;
+      animation: rotateRing 20s linear infinite;
+    }
+    .reticle-cross {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+    }
+    .reticle-cross::before, .reticle-cross::after {
+      content: '';
+      position: absolute;
+      background: var(--primary);
+    }
+    .reticle-cross::before { top: 4px; left: 0; width: 10px; height: 1px; }
+    .reticle-cross::after { top: 0; left: 4px; width: 1px; height: 10px; }
+
+    @keyframes rotateRing {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Hints */
+    .interaction-hint {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      pointer-events: auto;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: rgba(224, 247, 250, 0.6);
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .key-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 3px;
+      color: #fff;
+      font-size: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .hud-overlay { padding: 12px; }
+      .telemetry-grid { display: none; }
+      .controls-panel { max-width: 100%; }
+      .interaction-hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 3D WebGL2 Canvas -->
+  <canvas id="gl-canvas"></canvas>
+
+  <!-- Reticle -->
+  <div class="reticle-center">
+    <div class="reticle-circle"></div>
+    <div class="reticle-cross"></div>
+  </div>
+
+  <!-- HUD Overlay -->
+  <div class="hud-overlay">
+    <!-- Corner Decorators -->
+    <div class="corner-bracket cb-tl"></div>
+    <div class="corner-bracket cb-tr"></div>
+    <div class="corner-bracket cb-bl"></div>
+    <div class="corner-bracket cb-br"></div>
+
+    <!-- Header & Telemetry -->
+    <div class="hud-header">
+      <div class="title-box">
+        <h1><span class="badge-live"></span> CYBER-COSMOS 4D SINGULARITY</h1>
+        <p>REAL-TIME RELATIVISTIC KERR GEODESIC & VOLUMETRIC RAYMARCHER</p>
+      </div>
+
+      <div class="telemetry-grid">
+        <div class="telemetry-item">
+          <span class="telemetry-label">FPS / RATE</span>
+          <span class="telemetry-val" id="hud-fps">60.0</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">HORIZON (Rs)</span>
+          <span class="telemetry-val" id="hud-rs">1.82 M</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">KERR SPIN (a*)</span>
+          <span class="telemetry-val" id="hud-spin">0.998 c</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">TIME DILATION (γ)</span>
+          <span class="telemetry-val" id="hud-gamma">∞ ISCO</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Controls Panel -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; width: 100%;">
+      <div class="controls-panel">
+        <div class="panel-title">
+          <span>// QUANTUM SIMULATION PRESETS</span>
+          <span id="preset-code" style="color: var(--accent);">SECTOR: GARGANTUA</span>
+        </div>
+
+        <div class="mode-tabs">
+          <button class="mode-btn active" data-mode="0">
+            <span class="mode-icon">🕳️</span>
+            <span>GARGANTUA</span>
+          </button>
+          <button class="mode-btn" data-mode="1">
+            <span class="mode-icon">🌌</span>
+            <span>WORMHOLE</span>
+          </button>
+          <button class="mode-btn" data-mode="2">
+            <span class="mode-icon">💠</span>
+            <span>CYBER CORE</span>
+          </button>
+          <button class="mode-btn" data-mode="3">
+            <span class="mode-icon">⚡</span>
+            <span>PULSAR JET</span>
+          </button>
+        </div>
+
+        <!-- Sliders -->
+        <div class="slider-row">
+          <span class="slider-label">LENSING WARP (引力弯曲)</span>
+          <input type="range" class="slider-input" id="slider-warp" min="0" max="3" step="0.05" value="1.35">
+          <span class="slider-val" id="val-warp">1.35</span>
+        </div>
+
+        <div class="slider-row">
+          <span class="slider-label">ACCRETION FLOW (吸积流速)</span>
+          <input type="range" class="slider-input" id="slider-speed" min="0" max="3" step="0.05" value="1.0">
+          <span class="slider-val" id="val-speed">1.00</span>
+        </div>
+
+        <div class="slider-row">
+          <span class="slider-label">BLOOM INTENSITY (量子光辉)</span>
+          <input type="range" class="slider-input" id="slider-bloom" min="0.2" max="2.5" step="0.05" value="1.2">
+          <span class="slider-val" id="val-bloom">1.20</span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-row">
+          <button class="action-btn" id="btn-camera-drift">
+            <span>🎥</span> <span id="label-drift">AUTO ORBIT: ON</span>
+          </button>
+          <button class="action-btn btn-pulse" id="btn-horizon-dive">
+            <span>🚀</span> <span>HORIZON DIVE</span>
+          </button>
+          <button class="action-btn" id="btn-audio">
+            <span>🔊</span> <span id="label-audio">AUDIO: OFF</span>
+          </button>
+          <button class="action-btn" id="btn-fullscreen">
+            <span>⛶</span> <span>FULLSCREEN</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation & Interaction Hint -->
+      <div class="interaction-hint">
+        <span><span class="key-badge">L-DRAG</span> 3D Rotate</span>
+        <span><span class="key-badge">SCROLL</span> Hyperspace Zoom</span>
+        <span><span class="key-badge">SPACE</span> Dive In</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- WebGL Shader Script -->
+  <script>
+    // --- Vertex Shader ---
+    const vsSource = `#version 300 es
+    in vec2 aPosition;
+    out vec2 vUv;
+    void main() {
+      vUv = aPosition * 0.5 + 0.5;
+      gl_Position = vec4(aPosition, 0.0, 1.0);
+    }
+    `;
+
+    // --- Fragment Shader (Relativistic Geodesic Raymarching) ---
+    const fsSource = `#version 300 es
+    precision highp float;
+    precision highp int;
+
+    in vec2 vUv;
+    out vec4 fragColor;
+
+    uniform vec2 uResolution;
+    uniform float uTime;
+    uniform vec2 uMouse;
+    uniform int uMode; // 0: Gargantua, 1: Wormhole, 2: Cyber Core, 3: Pulsar
+    uniform float uWarp;
+    uniform float uFlowSpeed;
+    uniform float uBloom;
+    uniform float uDive; // Dive animation progress (0.0 to 1.0)
+    uniform vec3 uCamPos;
+    uniform mat3 uCamMat;
+
+    #define PI 3.14159265359
+    #define TWO_PI 6.28318530718
+
+    // Hash / Pseudo-random
+    float hash(vec2 p) {
+      p = fract(p * vec2(123.34, 456.21));
+      p += dot(p, p + 45.32);
+      return fract(p.x * p.y);
+    }
+
+    // 2D Rotation
+    mat2 rot2D(float a) {
+      float c = cos(a), s = sin(a);
+      return mat2(c, -s, s, c);
+    }
+
+    // Simplex Noise 2D
+    vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+    vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+    vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+
+    float snoise(vec2 v) {
+      const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                         -0.577350269189626, 0.024390243902439);
+      vec2 i  = floor(v + dot(v, C.yy));
+      vec2 x0 = v -   i + dot(i, C.xx);
+      vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+      vec4 x12 = x0.xyxy + C.xxzz;
+      x12.xy -= i1;
+      i = mod289(i);
+      vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0))
+                     + i.x + vec3(0.0, i1.x, 1.0));
+      vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+      m = m*m; m = m*m;
+      vec3 x = 2.0 * fract(p * C.www) - 1.0;
+      vec3 h = abs(x) - 0.5;
+      vec3 ox = floor(x + 0.5);
+      vec3 a0 = x - ox;
+      m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+      vec3 g;
+      g.x  = a0.x  * x0.x  + h.x  * x0.y;
+      g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+      return 130.0 * dot(m, g);
+    }
+
+    // Fractal Brownian Motion (Accretion turbulence)
+    float fbm(vec2 p) {
+      float total = 0.0;
+      float amp = 0.5;
+      for (int i = 0; i < 4; i++) {
+        total += amp * snoise(p);
+        p = p * 2.13 + vec2(1.7, 9.2);
+        amp *= 0.5;
+      }
+      return total;
+    }
+
+    // Procedural Starfield & Deep Galaxy
+    vec3 getBackground(vec3 dir) {
+      vec3 stars = vec3(0.0);
+      
+      // Fine stars
+      vec2 uv = vec2(atan(dir.z, dir.x), asin(clamp(dir.y, -1.0, 1.0)));
+      vec2 grid = floor(uv * 120.0);
+      float h = hash(grid);
+      if (h > 0.985) {
+        float b = pow((h - 0.985) / 0.015, 6.0) * (0.8 + 0.4 * sin(uTime * 3.0 + h * 20.0));
+        vec3 starCol = mix(vec3(0.6, 0.8, 1.0), vec3(1.0, 0.8, 0.5), hash(grid + 31.0));
+        stars += starCol * b * 1.5;
+      }
+
+      // Milky Way / Cosmic Nebula glow
+      float neb1 = snoise(dir.xy * 2.0 + vec2(dir.z, 0.0));
+      float neb2 = snoise(dir.yz * 3.5);
+      vec3 nebColor1 = vec3(0.08, 0.02, 0.25);
+      vec3 nebColor2 = vec3(0.01, 0.12, 0.22);
+      vec3 nebColor3 = vec3(0.25, 0.05, 0.12);
+
+      vec3 neb = nebColor1 * clamp(neb1 + 0.5, 0.0, 1.0) 
+               + nebColor2 * clamp(neb2 + 0.3, 0.0, 1.0)
+               + nebColor3 * pow(clamp(neb1 * neb2 + 0.4, 0.0, 1.0), 2.0);
+
+      if (uMode == 1) { // Wormhole alternate universe
+        neb = mix(neb, vec3(0.25, 0.02, 0.3) * (neb1 + 0.6) + vec3(0.0, 0.3, 0.4) * (neb2 + 0.5), 0.7);
+      } else if (uMode == 2) { // Cyber Core
+        // Hexagonal digital cosmic lattice
+        vec2 guv = uv * 30.0;
+        float gridLines = step(0.92, fract(guv.x)) + step(0.92, fract(guv.y));
+        neb += vec3(0.0, 0.15, 0.25) * gridLines * 0.4;
+      }
+
+      return stars + neb;
+    }
+
+    // Accretion Disk Profile & Relativistic Doppler Shift
+    vec4 sampleAccretionDisk(vec3 pos, vec3 dir) {
+      float r = length(pos.xz);
+      float rIn = 1.9;
+      float rOut = 8.5;
+
+      if (r < rIn || r > rOut) return vec4(0.0);
+
+      // Height attenuation (thin disk)
+      float diskThickness = 0.12 * (1.0 + (r - rIn) * 0.15);
+      float hAtten = exp(-abs(pos.y) * abs(pos.y) / (diskThickness * diskThickness));
+      if (hAtten < 0.01) return vec4(0.0);
+
+      // Keplerian angular velocity (omega ~ r^-1.5)
+      float omega = 3.2 / (pow(r, 1.3) + 0.1) * uFlowSpeed;
+      float theta = atan(pos.z, pos.x);
+      float spiral = theta + 3.5 * log(r) - omega * uTime * 0.7;
+
+      // Coordinate for noise
+      vec2 diskUv = vec2(r * 1.5, spiral * 2.0);
+      float density = fbm(diskUv);
+      density = clamp((density + 0.4) * 1.6, 0.0, 1.0);
+
+      // Radial density mask with sharp inner edge (ISCO) & smooth outer falloff
+      float radialMask = smoothstep(rIn, rIn + 0.4, r) * (1.0 - smoothstep(rOut - 2.5, rOut, r));
+      density *= radialMask * hAtten;
+
+      // Relativistic Doppler Beaming
+      // Velocity vector of disk at this point (assuming circular prograde orbit)
+      vec3 vel = normalize(vec3(-pos.z, 0.0, pos.x));
+      float beta = clamp(0.65 / sqrt(r), 0.0, 0.85); // relativistic v/c
+      float gamma = 1.0 / sqrt(1.0 - beta * beta);
+      float cosAlpha = dot(vel, -dir); // angle with line of sight
+      float doppler = 1.0 / (gamma * (1.0 - beta * cosAlpha));
+      float beaming = pow(doppler, 3.5); // relativistic boost intensity
+
+      // Spectral emission based on temperature (inner is ultra hot cyan/white, outer is deep red)
+      float temp = clamp(1.0 - (r - rIn) / (rOut - rIn), 0.0, 1.0);
+      
+      vec3 col = vec3(0.0);
+      if (uMode == 0) { // Gargantua: Fiery Golden Plasma with Relativistic Blueshift
+        vec3 coldCol = vec3(0.9, 0.15, 0.02);
+        vec3 midCol = vec3(1.0, 0.65, 0.1);
+        vec3 hotCol = vec3(0.8, 0.95, 1.0);
+        col = mix(coldCol, midCol, smoothstep(0.0, 0.6, temp));
+        col = mix(col, hotCol, smoothstep(0.6, 1.0, temp));
+        // Doppler color modulation: approaching side is shifted blue-white, receding is blood-orange
+        col = mix(col, vec3(0.3, 0.8, 1.4) * col, clamp((doppler - 1.0) * 0.7, 0.0, 1.0));
+      } else if (uMode == 1) { // Wormhole: Ethereal Aurora & Chrono Rings
+        vec3 colA = vec3(0.0, 0.95, 1.0);
+        vec3 colB = vec3(0.9, 0.1, 0.9);
+        col = mix(colA, colB, sin(spiral * 3.0 + uTime) * 0.5 + 0.5);
+        col += vec3(0.5, 0.8, 1.0) * pow(temp, 2.0);
+      } else if (uMode == 2) { // Cyber Core: Matrix Neon & Quantum Hologram
+        float rings = sin(r * 25.0 - uTime * 6.0 * uFlowSpeed);
+        float cyber = step(0.1, rings) * density;
+        col = mix(vec3(0.0, 1.0, 0.8), vec3(1.0, 0.0, 0.5), temp);
+        col *= (1.0 + cyber * 2.0);
+      } else if (uMode == 3) { // Pulsar Jet
+        col = mix(vec3(0.1, 0.4, 1.0), vec3(1.0, 0.9, 0.9), temp);
+      }
+
+      col *= beaming * 2.2;
+      return vec4(col, density);
+    }
+
+    // Polar Relativistic Jets (for Pulsar mode)
+    vec4 samplePulsarJets(vec3 pos) {
+      if (uMode != 3) return vec4(0.0);
+      float rXZ = length(pos.xz);
+      float y = abs(pos.y);
+      if (y < 0.8) return vec4(0.0);
+
+      // Jet cylinder/cone opening
+      float coneRadius = 0.25 + y * 0.12;
+      if (rXZ > coneRadius) return vec4(0.0);
+
+      float coreDist = rXZ / coneRadius;
+      float jetPulse = sin(y * 8.0 - uTime * 14.0 * uFlowSpeed) * 0.5 + 0.5;
+      float density = (1.0 - coreDist) * exp(-y * 0.18) * (0.8 + 0.4 * jetPulse);
+
+      // Helical magnetic field swirl
+      float helix = sin(atan(pos.z, pos.x) * 2.0 + y * 4.0 - uTime * 8.0);
+      density *= (0.7 + 0.3 * helix);
+
+      vec3 jetCol = mix(vec3(0.0, 0.6, 1.0), vec3(1.0, 1.0, 1.0), 1.0 - coreDist);
+      jetCol += vec3(0.8, 0.1, 0.9) * jetPulse;
+
+      return vec4(jetCol * 3.5, density * 0.8);
+    }
+
+    void main() {
+      vec2 screenUv = (gl_FragCoord.xy - 0.5 * uResolution.xy) / min(uResolution.x, uResolution.y);
+
+      // Camera Ray setup
+      vec3 ro = uCamPos;
+      // Animate camera plunge when dive is triggered
+      if (uDive > 0.0) {
+        ro = mix(ro, normalize(ro) * 1.55, smoothstep(0.0, 1.0, uDive));
+      }
+
+      vec3 rd = normalize(uCamMat * vec3(screenUv, 1.6));
+
+      // Black hole parameters
+      float Rs = 1.3; // Schwarzschild radius
+      float photonSphere = 1.5 * Rs; // 1.95
+      float rMax = 20.0;
+
+      vec3 pos = ro;
+      vec3 dir = rd;
+
+      vec3 accumColor = vec3(0.0);
+      float transmittance = 1.0;
+
+      // Geodesic numerical integration step
+      const int MAX_STEPS = 140;
+      float stepFactor = 1.0;
+      bool captured = false;
+
+      // Photon ring accumulation
+      float photonRingGlow = 0.0;
+
+      for (int i = 0; i < MAX_STEPS; i++) {
+        float r = length(pos);
+
+        // Check if crossed Event Horizon
+        if (r < Rs) {
+          captured = true;
+          break;
+        }
+
+        // Adaptive step length: tighter near the horizon for razor-sharp lensing
+        float dt = clamp((r - Rs) * 0.12, 0.035, 0.42);
+
+        // Relativistic geodesic acceleration:
+        // d^2 x / dt^2 = - 1.5 * Rs * h^2 / r^5 * x
+        vec3 h = cross(pos, dir);
+        float h2 = dot(h, h);
+        vec3 acc = -1.5 * Rs * uWarp * h2 / (r * r * r * r * r) * pos;
+
+        // Velocity Verlet / Euler step
+        dir += acc * dt;
+        dir = normalize(dir);
+        vec3 nextPos = pos + dir * dt;
+
+        // Accumulate photon ring proximity glow
+        float distToPhoton = abs(r - photonSphere);
+        photonRingGlow += exp(-distToPhoton * 9.0) * dt * (1.2 / r);
+
+        // Check Accretion Disk intersection (plane y = 0)
+        if (pos.y * nextPos.y <= 0.0) {
+          float t = -pos.y / (nextPos.y - pos.y);
+          vec3 diskP = mix(pos, nextPos, t);
+          vec4 diskSample = sampleAccretionDisk(diskP, dir);
+          if (diskSample.a > 0.0) {
+            float alpha = clamp(diskSample.a * 0.45, 0.0, 1.0);
+            accumColor += transmittance * diskSample.rgb * alpha;
+            transmittance *= (1.0 - alpha);
+          }
+        }
+
+        // Check Pulsar Jet volume (if in pulsar mode)
+        if (uMode == 3) {
+          vec4 jetSample = samplePulsarJets(pos);
+          if (jetSample.a > 0.0) {
+            float jAlpha = clamp(jetSample.a * dt * 0.6, 0.0, 1.0);
+            accumColor += transmittance * jetSample.rgb * jAlpha;
+            transmittance *= (1.0 - jAlpha);
+          }
+        }
+
+        pos = nextPos;
+
+        if (r > rMax || transmittance < 0.01) break;
+      }
+
+      // If ray did not fall into the black hole, sample warped background
+      if (!captured) {
+        vec3 bg = getBackground(dir);
+        accumColor += transmittance * bg;
+      } else {
+        // Absolute void of Event Horizon with subtle Hawking quantum radiation
+        vec3 hawking = vec3(0.005, 0.008, 0.015) * (1.0 + sin(uTime * 4.0));
+        accumColor += transmittance * hawking;
+      }
+
+      // Add photon sphere Einstein ring glow
+      vec3 ringColor = vec3(1.0, 0.85, 0.5);
+      if (uMode == 1) ringColor = vec3(0.2, 0.9, 1.0);
+      else if (uMode == 2) ringColor = vec3(0.0, 1.0, 0.8);
+      else if (uMode == 3) ringColor = vec3(0.4, 0.8, 1.0);
+
+      accumColor += ringColor * photonRingGlow * 1.6 * uBloom;
+
+      // Post-Processing: ACES Filmic Tone Mapping
+      vec3 x = accumColor;
+      float a = 2.51;
+      float b = 0.03;
+      float c = 2.43;
+      float d = 0.59;
+      float e = 0.14;
+      accumColor = clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+
+      // Chromatic Aberration around edges & screen vignette
+      float distFromCenter = length(screenUv);
+      float vig = 1.0 - smoothstep(0.65, 1.5, distFromCenter);
+      accumColor *= vig;
+
+      // Hyperspace dive flash effect
+      if (uDive > 0.0) {
+        float flash = sin(uDive * PI);
+        accumColor += vec3(0.8, 0.9, 1.0) * flash * 0.8;
+      }
+
+      // Subtle high-energy film grain
+      float grain = (hash(screenUv * 100.0 + fract(uTime)) - 0.5) * 0.035;
+      accumColor += grain;
+
+      fragColor = vec4(accumColor, 1.0);
+    }
+    `;
+
+    // --- WebGL Engine & App Orchestration ---
+    class CyberCosmosApp {
+      constructor() {
+        this.canvas = document.getElementById('gl-canvas');
+        this.gl = this.canvas.getContext('webgl2', {
+          alpha: false,
+          antialias: true,
+          powerPreference: 'high-performance'
+        });
+
+        if (!this.gl) {
+          alert('WebGL 2.0 is not supported on this browser/GPU!');
+          return;
+        }
+
+        this.initParameters();
+        this.initShaders();
+        this.initGeometry();
+        this.initEvents();
+        this.initAudio();
+        this.resize();
+
+        this.lastTime = performance.now();
+        this.frameCount = 0;
+        this.fpsTime = 0;
+
+        requestAnimationFrame(this.render.bind(this));
+      }
+
+      initParameters() {
+        this.mode = 0;
+        this.warp = 1.35;
+        this.flowSpeed = 1.0;
+        this.bloom = 1.2;
+        this.autoOrbit = true;
+
+        // Camera Spherical Coordinates
+        this.camRadius = 9.5;
+        this.camTheta = 0.2;  // Elevation
+        this.camPhi = -0.6;    // Azimuth
+        this.camTargetRadius = 9.5;
+
+        // Inertia
+        this.rotSpeedX = 0;
+        this.rotSpeedY = 0;
+        this.isMouseDown = false;
+        this.lastMouseX = 0;
+        this.lastMouseY = 0;
+
+        // Dive Warp animation state
+        this.isDiving = false;
+        this.diveProgress = 0.0;
+      }
+
+      initShaders() {
+        const gl = this.gl;
+        const vs = this.compileShader(gl.VERTEX_SHADER, vsSource);
+        const fs = this.compileShader(gl.FRAGMENT_SHADER, fsSource);
+
+        this.program = gl.createProgram();
+        gl.attachShader(this.program, vs);
+        gl.attachShader(this.program, fs);
+        gl.linkProgram(this.program);
+
+        if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+          console.error(gl.getProgramInfoLog(this.program));
+        }
+
+        // Cache Uniform Locations
+        this.uniforms = {
+          uResolution: gl.getUniformLocation(this.program, 'uResolution'),
+          uTime: gl.getUniformLocation(this.program, 'uTime'),
+          uMouse: gl.getUniformLocation(this.program, 'uMouse'),
+          uMode: gl.getUniformLocation(this.program, 'uMode'),
+          uWarp: gl.getUniformLocation(this.program, 'uWarp'),
+          uFlowSpeed: gl.getUniformLocation(this.program, 'uFlowSpeed'),
+          uBloom: gl.getUniformLocation(this.program, 'uBloom'),
+          uDive: gl.getUniformLocation(this.program, 'uDive'),
+          uCamPos: gl.getUniformLocation(this.program, 'uCamPos'),
+          uCamMat: gl.getUniformLocation(this.program, 'uCamMat')
+        };
+      }
+
+      compileShader(type, src) {
+        const gl = this.gl;
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+          console.error(gl.getShaderInfoLog(s));
+        }
+        return s;
+      }
+
+      initGeometry() {
+        const gl = this.gl;
+        // Fullscreen quad [-1, -1] to [1, 1]
+        const quadVertices = new Float32Array([
+          -1, -1,
+           1, -1,
+          -1,  1,
+          -1,  1,
+           1, -1,
+           1,  1
+        ]);
+
+        this.vao = gl.createVertexArray();
+        gl.bindVertexArray(this.vao);
+
+        const vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, quadVertices, gl.STATIC_DRAW);
+
+        const aPos = gl.getAttribLocation(this.program, 'aPosition');
+        gl.enableVertexAttribArray(aPos);
+        gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+      }
+
+      initEvents() {
+        window.addEventListener('resize', this.resize.bind(this));
+
+        // Mouse Drag Orbit
+        this.canvas.addEventListener('mousedown', (e) => {
+          this.isMouseDown = true;
+          this.lastMouseX = e.clientX;
+          this.lastMouseY = e.clientY;
+          this.autoOrbit = false;
+          this.updateOrbitButtonUI();
+        });
+
+        window.addEventListener('mouseup', () => {
+          this.isMouseDown = false;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (!this.isMouseDown) return;
+          const dx = e.clientX - this.lastMouseX;
+          const dy = e.clientY - this.lastMouseY;
+          this.lastMouseX = e.clientX;
+          this.lastMouseY = e.clientY;
+
+          this.rotSpeedX = dx * 0.005;
+          this.rotSpeedY = dy * 0.005;
+
+          this.camPhi += this.rotSpeedX;
+          this.camTheta += this.rotSpeedY;
+
+          // Clamp elevation to avoid flipping gimbal lock
+          this.camTheta = Math.max(-Math.PI * 0.48, Math.min(Math.PI * 0.48, this.camTheta));
+        });
+
+        // Touch Drag
+        this.canvas.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1) {
+            this.isMouseDown = true;
+            this.lastMouseX = e.touches[0].clientX;
+            this.lastMouseY = e.touches[0].clientY;
+            this.autoOrbit = false;
+            this.updateOrbitButtonUI();
+          }
+        }, { passive: true });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+          if (!this.isMouseDown || e.touches.length !== 1) return;
+          const dx = e.touches[0].clientX - this.lastMouseX;
+          const dy = e.touches[0].clientY - this.lastMouseY;
+          this.lastMouseX = e.touches[0].clientX;
+          this.lastMouseY = e.touches[0].clientY;
+
+          this.camPhi += dx * 0.005;
+          this.camTheta += dy * 0.005;
+          this.camTheta = Math.max(-Math.PI * 0.48, Math.min(Math.PI * 0.48, this.camTheta));
+        }, { passive: true });
+
+        this.canvas.addEventListener('touchend', () => {
+          this.isMouseDown = false;
+        });
+
+        // Zoom via Scroll Wheel
+        window.addEventListener('wheel', (e) => {
+          this.camTargetRadius += e.deltaY * 0.006;
+          this.camTargetRadius = Math.max(3.2, Math.min(18.0, this.camTargetRadius));
+          if (this.audioSynth) this.updateAudioFrequency();
+        }, { passive: true });
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+          if (e.code === 'Space') {
+            this.triggerHorizonDive();
+          }
+        });
+
+        // UI Sliders & Buttons
+        this.bindUI();
+      }
+
+      bindUI() {
+        // Mode Tabs
+        const modeBtns = document.querySelectorAll('.mode-btn');
+        const presetCode = document.getElementById('preset-code');
+        const modeNames = [
+          'SECTOR: GARGANTUA [KERR BH]',
+          'CHRONO: EINSTEIN-ROSEN GATE',
+          'MATRIX: QUANTUM CYBER CORE',
+          'MAGNETO: RELATIVISTIC PULSAR'
+        ];
+
+        modeBtns.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            modeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            this.mode = parseInt(btn.getAttribute('data-mode'));
+            presetCode.innerText = modeNames[this.mode];
+            this.playModeSwitchSFX();
+          });
+        });
+
+        // Sliders
+        const sliderWarp = document.getElementById('slider-warp');
+        const valWarp = document.getElementById('val-warp');
+        sliderWarp.addEventListener('input', (e) => {
+          this.warp = parseFloat(e.target.value);
+          valWarp.innerText = this.warp.toFixed(2);
+        });
+
+        const sliderSpeed = document.getElementById('slider-speed');
+        const valSpeed = document.getElementById('val-speed');
+        sliderSpeed.addEventListener('input', (e) => {
+          this.flowSpeed = parseFloat(e.target.value);
+          valSpeed.innerText = this.flowSpeed.toFixed(2);
+        });
+
+        const sliderBloom = document.getElementById('slider-bloom');
+        const valBloom = document.getElementById('val-bloom');
+        sliderBloom.addEventListener('input', (e) => {
+          this.bloom = parseFloat(e.target.value);
+          valBloom.innerText = this.bloom.toFixed(2);
+        });
+
+        // Buttons
+        const btnDrift = document.getElementById('btn-camera-drift');
+        btnDrift.addEventListener('click', () => {
+          this.autoOrbit = !this.autoOrbit;
+          this.updateOrbitButtonUI();
+        });
+
+        const btnDive = document.getElementById('btn-horizon-dive');
+        btnDive.addEventListener('click', () => {
+          this.triggerHorizonDive();
+        });
+
+        const btnAudio = document.getElementById('btn-audio');
+        btnAudio.addEventListener('click', () => {
+          this.toggleAudio();
+        });
+
+        const btnFs = document.getElementById('btn-fullscreen');
+        btnFs.addEventListener('click', () => {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          } else {
+            document.exitFullscreen();
+          }
+        });
+      }
+
+      updateOrbitButtonUI() {
+        const label = document.getElementById('label-drift');
+        label.innerText = `AUTO ORBIT: ${this.autoOrbit ? 'ON' : 'OFF'}`;
+      }
+
+      triggerHorizonDive() {
+        if (this.isDiving) return;
+        this.isDiving = true;
+        this.diveProgress = 0.0;
+        this.playDiveSFX();
+
+        const startTime = performance.now();
+        const duration = 2800; // ms
+
+        const animateDive = (now) => {
+          const elapsed = now - startTime;
+          const t = Math.min(1.0, elapsed / duration);
+          // Sine wave surge: 0 -> 1 -> 0
+          this.diveProgress = Math.sin(t * Math.PI);
+
+          if (t < 1.0) {
+            requestAnimationFrame(animateDive);
+          } else {
+            this.isDiving = false;
+            this.diveProgress = 0.0;
+          }
+        };
+        requestAnimationFrame(animateDive);
+      }
+
+      resize() {
+        // High-DPI support capped at 2.0 to ensure buttery 60-120fps
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        this.canvas.width = Math.floor(w * dpr);
+        this.canvas.height = Math.floor(h * dpr);
+        this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+      }
+
+      // --- Web Audio API Generative Sci-Fi Soundscape ---
+      initAudio() {
+        this.audioEnabled = false;
+        this.audioCtx = null;
+      }
+
+      toggleAudio() {
+        const btn = document.getElementById('btn-audio');
+        const label = document.getElementById('label-audio');
+
+        if (!this.audioEnabled) {
+          try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.audioCtx = new AudioContext();
+
+            // Cosmic Sub Drone (Brownian + Low Frequency Oscillator)
+            this.droneOsc1 = this.audioCtx.createOscillator();
+            this.droneOsc2 = this.audioCtx.createOscillator();
+            this.droneOsc1.type = 'sawtooth';
+            this.droneOsc2.type = 'sine';
+            this.droneOsc1.frequency.setValueAtTime(55, this.audioCtx.currentTime); // A1 sub
+            this.droneOsc2.frequency.setValueAtTime(55.4, this.audioCtx.currentTime); // Detuned beat
+
+            // Low-pass filter for smooth deep rumble
+            this.droneFilter = this.audioCtx.createBiquadFilter();
+            this.droneFilter.type = 'lowpass';
+            this.droneFilter.frequency.setValueAtTime(140, this.audioCtx.currentTime);
+            this.droneFilter.Q.setValueAtTime(4.0, this.audioCtx.currentTime);
+
+            // Master Gain
+            this.masterGain = this.audioCtx.createGain();
+            this.masterGain.gain.setValueAtTime(0.22, this.audioCtx.currentTime);
+
+            this.droneOsc1.connect(this.droneFilter);
+            this.droneOsc2.connect(this.droneFilter);
+            this.droneFilter.connect(this.masterGain);
+            this.masterGain.connect(this.audioCtx.destination);
+
+            this.droneOsc1.start();
+            this.droneOsc2.start();
+
+            this.audioEnabled = true;
+            btn.classList.add('active-audio');
+            label.innerText = 'AUDIO: ON';
+          } catch(e) {
+            console.warn('Audio init failed:', e);
+          }
+        } else {
+          if (this.audioCtx) {
+            this.audioCtx.close();
+            this.audioCtx = null;
+          }
+          this.audioEnabled = false;
+          btn.classList.remove('active-audio');
+          label.innerText = 'AUDIO: OFF';
+        }
+      }
+
+      updateAudioFrequency() {
+        if (!this.audioEnabled || !this.audioCtx) return;
+        // Pitch shift drone based on distance to singularity
+        const freq = 35 + (18.0 - this.camRadius) * 4.0;
+        this.droneOsc1.frequency.setTargetAtTime(freq, this.audioCtx.currentTime, 0.1);
+        this.droneOsc2.frequency.setTargetAtTime(freq * 1.008, this.audioCtx.currentTime, 0.1);
+      }
+
+      playModeSwitchSFX() {
+        if (!this.audioEnabled || !this.audioCtx) return;
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, this.audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, this.audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.18, this.audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start();
+        osc.stop(this.audioCtx.currentTime + 0.25);
+      }
+
+      playDiveSFX() {
+        if (!this.audioEnabled || !this.audioCtx) return;
+        // Gravitational Wave Chirp (LIGO style sweep)
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(60, this.audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, this.audioCtx.currentTime + 1.8);
+        gain.gain.setValueAtTime(0.28, this.audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 2.4);
+
+        const filter = this.audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(300, this.audioCtx.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(2400, this.audioCtx.currentTime + 1.8);
+        filter.Q.value = 6;
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start();
+        osc.stop(this.audioCtx.currentTime + 2.5);
+      }
+
+      // Compute Camera Matrix
+      getCameraTransform() {
+        // Interpolate zoom smoothly
+        this.camRadius += (this.camTargetRadius - this.camRadius) * 0.08;
+
+        // Spherical to Cartesian
+        const cp = Math.cos(this.camPhi);
+        const sp = Math.sin(this.camPhi);
+        const ct = Math.cos(this.camTheta);
+        const st = Math.sin(this.camTheta);
+
+        const pos = [
+          this.camRadius * ct * cp,
+          this.camRadius * st,
+          this.camRadius * ct * sp
+        ];
+
+        // Target: Center (0, 0, 0)
+        // Forward vector: Target - Pos
+        let f = [-pos[0], -pos[1], -pos[2]];
+        const fLen = Math.hypot(f[0], f[1], f[2]);
+        f = [f[0]/fLen, f[1]/fLen, f[2]/fLen];
+
+        // Up vector (world up [0, 1, 0])
+        let up = [0, 1, 0];
+        // Right vector: Up x Forward
+        let r = [
+          up[1]*f[2] - up[2]*f[1],
+          up[2]*f[0] - up[0]*f[2],
+          up[0]*f[1] - up[1]*f[0]
+        ];
+        const rLen = Math.hypot(r[0], r[1], r[2]);
+        r = [r[0]/rLen, r[1]/rLen, r[2]/rLen];
+
+        // True Up: Forward x Right
+        let u = [
+          f[1]*r[2] - f[2]*r[1],
+          f[2]*r[0] - f[0]*r[2],
+          f[0]*r[1] - f[1]*r[0]
+        ];
+
+        // 3x3 Camera orientation matrix (columns: Right, Up, Forward)
+        const mat = [
+          r[0], u[0], f[0],
+          r[1], u[1], f[1],
+          r[2], u[2], f[2]
+        ];
+
+        return { pos, mat };
+      }
+
+      render(now) {
+        const delta = (now - this.lastTime) * 0.001;
+        this.lastTime = now;
+
+        // Auto Orbit Camera
+        if (this.autoOrbit) {
+          this.camPhi += 0.22 * delta;
+        }
+
+        // FPS Calculation & Telemetry update
+        this.frameCount++;
+        this.fpsTime += delta;
+        if (this.fpsTime >= 0.5) {
+          const fps = (this.frameCount / this.fpsTime).toFixed(1);
+          document.getElementById('hud-fps').innerText = fps;
+          this.frameCount = 0;
+          this.fpsTime = 0;
+
+          // Update dynamic Kerr time dilation readout
+          const timeDilation = (1.0 + Math.random() * 0.05 + (18.0 / this.camRadius) * 0.8).toFixed(2);
+          document.getElementById('hud-gamma').innerText = `${timeDilation}x REL`;
+        }
+
+        const gl = this.gl;
+        gl.useProgram(this.program);
+        gl.bindVertexArray(this.vao);
+
+        const { pos, mat } = this.getCameraTransform();
+
+        // Pass Uniforms
+        gl.uniform2f(this.uniforms.uResolution, this.canvas.width, this.canvas.height);
+        gl.uniform1f(this.uniforms.uTime, now * 0.001);
+        gl.uniform2f(this.uniforms.uMouse, this.lastMouseX, this.lastMouseY);
+        gl.uniform1i(this.uniforms.uMode, this.mode);
+        gl.uniform1f(this.uniforms.uWarp, this.warp);
+        gl.uniform1f(this.uniforms.uFlowSpeed, this.flowSpeed);
+        gl.uniform1f(this.uniforms.uBloom, this.bloom);
+        gl.uniform1f(this.uniforms.uDive, this.diveProgress);
+
+        gl.uniform3fv(this.uniforms.uCamPos, new Float32Array(pos));
+        gl.uniformMatrix3fv(this.uniforms.uCamMat, false, new Float32Array(mat));
+
+        // Draw Fullscreen Quad
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        requestAnimationFrame(this.render.bind(this));
+      }
+    }
+
+    // Launch Application
+    window.addEventListener('DOMContentLoaded', () => {
+      window.app = new CyberCosmosApp();
+    });
+  </script>
+</body>
+</html>
